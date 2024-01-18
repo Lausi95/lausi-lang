@@ -3,6 +3,7 @@ package lausilang
 enum class TokenType {
   FUNCTION_KEY,
   SYMBOL,
+  INTEGER,
   OPENING_PAREN,
   CLOSING_PAREN,
   OPENING_CURLY,
@@ -21,63 +22,113 @@ data class Token(val type: TokenType, val value: String?) {
   constructor(type: TokenType): this(type, null)
 }
 
-fun tokenize(input: String): List<Token> {
-  val tokens = mutableListOf<Token>()
+/**
+ * Lexer is NOT thread safe!
+ */
+class Lexer(private val input: String) {
+  private var i = 0
+  private var buffer = ""
+  private val tokens = mutableListOf<Token>()
 
-  var i = 0
-  var buffer = ""
+  fun tokenize(): List<Token> {
+    i = 0
+    buffer = ""
+    tokens.clear()
 
-  while (i < input.length) {
-    if (input[i] == '(') {
-      tokens.add(Token(TokenType.OPENING_PAREN))
-    } else if (input[i] == ')') {
-      tokens.add(Token(TokenType.CLOSING_PAREN))
-    } else if (input[i] == '{') {
-      tokens.add(Token(TokenType.OPENING_CURLY))
-    } else if (input[i] == '}') {
-      tokens.add(Token(TokenType.CLOSING_CURLY))
-    } else if (input[i] == ';') {
-      tokens.add(Token(TokenType.SEMICOLON))
-    } else if (input[i] == ':') {
-      tokens.add(Token(TokenType.COLON))
-    } else if (input[i] == ',') {
-      tokens.add(Token(TokenType.COMMA))
-    } else if (input[i] == '+') {
-      tokens.add(Token(TokenType.PLUS))
-    } else if (input[i] == '-') {
-      tokens.add(Token(TokenType.MINUS))
-    } else if (input[i] == '*') {
-      tokens.add(Token(TokenType.STAR))
-    } else if (input[i] == '/') {
-      tokens.add(Token(TokenType.SLASH))
-    } else if (input[i] == '\"') {
-      i++
-      while (i < input.length && input[i] != '\"') {
-        buffer += input[i]
-        i++
+    while (inBound()) {
+      if (currentIs('(')) {
+        tokens.add(Token(TokenType.OPENING_PAREN))
+      } else if (currentIs(')')) {
+        tokens.add(Token(TokenType.CLOSING_PAREN))
+      } else if (currentIs('{')) {
+        tokens.add(Token(TokenType.OPENING_CURLY))
+      } else if (currentIs('}')) {
+        tokens.add(Token(TokenType.CLOSING_CURLY))
+      } else if (currentIs(';')) {
+        tokens.add(Token(TokenType.SEMICOLON))
+      } else if (currentIs(':')) {
+        tokens.add(Token(TokenType.COLON))
+      } else if (currentIs(',')) {
+        tokens.add(Token(TokenType.COMMA))
+      } else if (currentIs('+')) {
+        tokens.add(Token(TokenType.PLUS))
+      } else if (currentIs('-')) {
+        tokens.add(Token(TokenType.MINUS))
+      } else if (currentIs('*')) {
+        tokens.add(Token(TokenType.STAR))
+      } else if (currentIs('*')) {
+        tokens.add(Token(TokenType.SLASH))
+      } else if (currentIs('\"')) {
+        parseString()
+      } else if (current().isLetter()) {
+        parseSymbol()
+      } else if (!current().isWhitespace()) {
+        error("Unrecognized token at position $i: ${input[i]}")
       }
-
-      tokens.add(Token(TokenType.STRING, buffer))
-      buffer = ""
-    } else if (input[i].isLetter()) {
-      while (i < input.length && input[i].isLetterOrDigit()) {
-        buffer += input[i]
-        i++
-      }
-
-      if (buffer == "fun") {
-        tokens.add(Token(TokenType.FUNCTION_KEY, buffer))
-      } else {
-        tokens.add(Token(TokenType.SYMBOL, buffer))
-      }
-
-      buffer = ""
-      i--
-    } else if (!input[i].isWhitespace()) {
-      error("Unrecognized token at position $i: ${input[i]}")
+      next()
     }
-    i++
+
+    return tokens
   }
 
-  return tokens
+  private fun current(): Char {
+    return input[i]
+  }
+
+  private fun currentIs(char: Char): Boolean {
+    return current() == char
+  }
+
+  private fun next(): Char? {
+    i++
+    if (inBound()) {
+      return current()
+    }
+    return null
+  }
+
+  private fun prev(): Char {
+    i--
+    return current()
+  }
+
+  private fun inBound(): Boolean {
+    return i < input.length
+  }
+
+  private fun clearBuffer() {
+    buffer = ""
+  }
+
+  private fun appendBuffer(char: Char) {
+    buffer += char
+  }
+
+  private fun bufferIs(check: String): Boolean {
+    return buffer == check
+  }
+
+  private fun parseString() {
+    // TODO(tla): cannot escape double quotes in strings yet
+    while (next() != '\"') {
+      buffer += current()
+    }
+    tokens.add(Token(TokenType.STRING, buffer))
+    clearBuffer()
+  }
+
+  private fun parseSymbol() {
+    do {
+      appendBuffer(current())
+    } while (next()?.isLetterOrDigit() == true)
+
+    if (bufferIs("fun")) {
+      tokens.add(Token(TokenType.FUNCTION_KEY, buffer))
+    } else {
+      tokens.add(Token(TokenType.SYMBOL, buffer))
+    }
+
+    clearBuffer()
+    prev()
+  }
 }

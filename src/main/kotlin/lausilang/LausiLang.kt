@@ -13,7 +13,7 @@ fun main(args: Array<String>) {
   }
   val input = Files.readAllLines(inputFile).joinToString("\n")
 
-  val tokens = tokenize(input)
+  val tokens = Lexer(input).tokenize()
 
   println(tokens)
 }
