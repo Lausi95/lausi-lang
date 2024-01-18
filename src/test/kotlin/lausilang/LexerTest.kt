@@ -7,41 +7,41 @@ class LexerTest {
 
   @Test
   fun tokenizeFunctionKeyword() {
-    assertEquals(listOf(Token(TokenType.function_keyword, "fun")), tokenize("fun"))
+    assertEquals(listOf(Token(TokenType.FUNCTION_KEY, "fun")), tokenize("fun"))
   }
 
   @Test
   fun tokenizeOpenParen() {
-    assertEquals(listOf(Token(TokenType.open_paren)), tokenize("("))
+    assertEquals(listOf(Token(TokenType.OPENING_PAREN)), tokenize("("))
   }
 
   @Test
   fun tokenizeClosingParen() {
-    assertEquals(listOf(Token(TokenType.close_paren)), tokenize(")"))
+    assertEquals(listOf(Token(TokenType.CLOSING_PAREN)), tokenize(")"))
   }
 
   @Test
   fun tokenizeOpenCurly() {
-    assertEquals(listOf(Token(TokenType.open_curly)), tokenize("{"))
+    assertEquals(listOf(Token(TokenType.OPENING_CURLY)), tokenize("{"))
   }
 
   @Test
   fun tokenizeClosingCurly() {
-    assertEquals(listOf(Token(TokenType.close_curly)), tokenize("}"))
+    assertEquals(listOf(Token(TokenType.CLOSING_CURLY)), tokenize("}"))
   }
 
   @Test
   fun tokenizeSemicolon() {
-    assertEquals(listOf(Token(TokenType.semicolon)), tokenize(";"))
+    assertEquals(listOf(Token(TokenType.SEMICOLON)), tokenize(";"))
   }
 
   @Test
   fun tokenizeSymbol() {
-    assertEquals(listOf(Token(TokenType.symbol, "foo")), tokenize("foo"))
+    assertEquals(listOf(Token(TokenType.SYMBOL, "foo")), tokenize("foo"))
   }
 
   @Test
   fun tokenizeString() {
-    assertEquals(listOf(Token(TokenType.string, "fun string")), tokenize("\"fun string\""))
+    assertEquals(listOf(Token(TokenType.STRING, "fun string")), tokenize("\"fun string\""))
   }
 }

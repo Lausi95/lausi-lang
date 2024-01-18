@@ -1,20 +1,20 @@
 package lausilang
 
 enum class TokenType {
-  function_keyword,
-  symbol,
-  open_paren,
-  close_paren,
-  open_curly,
-  close_curly,
-  semicolon,
-  string,
-  plus,
-  minus,
-  star,
-  slash,
-  comma,
-  colon,
+  FUNCTION_KEY,
+  SYMBOL,
+  OPENING_PAREN,
+  CLOSING_PAREN,
+  OPENING_CURLY,
+  CLOSING_CURLY,
+  SEMICOLON,
+  STRING,
+  PLUS,
+  MINUS,
+  STAR,
+  SLASH,
+  COMMA,
+  COLON,
 }
 
 data class Token(val type: TokenType, val value: String?) {
@@ -29,27 +29,27 @@ fun tokenize(input: String): List<Token> {
 
   while (i < input.length) {
     if (input[i] == '(') {
-      tokens.add(Token(TokenType.open_paren))
+      tokens.add(Token(TokenType.OPENING_PAREN))
     } else if (input[i] == ')') {
-      tokens.add(Token(TokenType.close_paren))
+      tokens.add(Token(TokenType.CLOSING_PAREN))
     } else if (input[i] == '{') {
-      tokens.add(Token(TokenType.open_curly))
+      tokens.add(Token(TokenType.OPENING_CURLY))
     } else if (input[i] == '}') {
-      tokens.add(Token(TokenType.close_curly))
+      tokens.add(Token(TokenType.CLOSING_CURLY))
     } else if (input[i] == ';') {
-      tokens.add(Token(TokenType.semicolon))
+      tokens.add(Token(TokenType.SEMICOLON))
     } else if (input[i] == ':') {
-      tokens.add(Token(TokenType.colon))
+      tokens.add(Token(TokenType.COLON))
     } else if (input[i] == ',') {
-      tokens.add(Token(TokenType.comma))
+      tokens.add(Token(TokenType.COMMA))
     } else if (input[i] == '+') {
-      tokens.add(Token(TokenType.plus))
+      tokens.add(Token(TokenType.PLUS))
     } else if (input[i] == '-') {
-      tokens.add(Token(TokenType.minus))
+      tokens.add(Token(TokenType.MINUS))
     } else if (input[i] == '*') {
-      tokens.add(Token(TokenType.star))
+      tokens.add(Token(TokenType.STAR))
     } else if (input[i] == '/') {
-      tokens.add(Token(TokenType.slash))
+      tokens.add(Token(TokenType.SLASH))
     } else if (input[i] == '\"') {
       i++
       while (i < input.length && input[i] != '\"') {
@@ -57,7 +57,7 @@ fun tokenize(input: String): List<Token> {
         i++
       }
 
-      tokens.add(Token(TokenType.string, buffer))
+      tokens.add(Token(TokenType.STRING, buffer))
       buffer = ""
     } else if (input[i].isLetter()) {
       while (i < input.length && input[i].isLetterOrDigit()) {
@@ -66,9 +66,9 @@ fun tokenize(input: String): List<Token> {
       }
 
       if (buffer == "fun") {
-        tokens.add(Token(TokenType.function_keyword, buffer))
+        tokens.add(Token(TokenType.FUNCTION_KEY, buffer))
       } else {
-        tokens.add(Token(TokenType.symbol, buffer))
+        tokens.add(Token(TokenType.SYMBOL, buffer))
       }
 
       buffer = ""
