@@ -10,6 +10,9 @@ enum class TokenType {
   semicolon,
   string,
   plus,
+  minus,
+  star,
+  slash,
   comma,
   colon,
 }
@@ -41,6 +44,12 @@ fun tokenize(input: String): List<Token> {
       tokens.add(Token(TokenType.comma))
     } else if (input[i] == '+') {
       tokens.add(Token(TokenType.plus))
+    } else if (input[i] == '-') {
+      tokens.add(Token(TokenType.minus))
+    } else if (input[i] == '*') {
+      tokens.add(Token(TokenType.star))
+    } else if (input[i] == '/') {
+      tokens.add(Token(TokenType.slash))
     } else if (input[i] == '\"') {
       i++
       while (i < input.length && input[i] != '\"') {
