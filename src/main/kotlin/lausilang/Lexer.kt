@@ -1,9 +1,8 @@
 package lausilang
 
 enum class TokenType {
-  FUNCTION_KEY,
-  SYMBOL,
   INTEGER,
+  SYMBOL,
   OPENING_PAREN,
   CLOSING_PAREN,
   OPENING_CURLY,
@@ -16,119 +15,47 @@ enum class TokenType {
   SLASH,
   COMMA,
   COLON,
+  DOT,
+  END,
 }
 
 data class Token(val type: TokenType, val value: String?) {
   constructor(type: TokenType): this(type, null)
 }
 
-/**
- * Lexer is NOT thread safe!
- */
-class Lexer(private val input: String) {
-  private var i = 0
-  private var buffer = ""
-  private val tokens = mutableListOf<Token>()
+val TOKEN_PATTERNS = mapOf(
+  "^\\s".toRegex() to null,
+  "^//.*".toRegex() to null,
+  "^\\d+".toRegex() to TokenType.INTEGER,
+  "^\"[^\"]*\"".toRegex() to TokenType.STRING,
+  "^\\(".toRegex() to TokenType.OPENING_PAREN,
+  "^\\)".toRegex() to TokenType.CLOSING_PAREN,
+  "^\\{".toRegex() to TokenType.OPENING_CURLY,
+  "^}".toRegex() to TokenType.CLOSING_CURLY,
+  "^;".toRegex() to TokenType.SEMICOLON,
+  "^:".toRegex() to TokenType.COLON,
+  "^,".toRegex() to TokenType.COMMA,
+  "^\\.".toRegex() to TokenType.DOT,
+  "^\\+".toRegex() to TokenType.PLUS,
+  "^-".toRegex() to TokenType.MINUS,
+  "^\\*".toRegex() to TokenType.STAR,
+  "^/".toRegex() to TokenType.SLASH,
+  "^\\w+".toRegex() to TokenType.SYMBOL,
+)
 
-  fun tokenize(): List<Token> {
-    i = 0
-    buffer = ""
-    tokens.clear()
-
-    while (inBound()) {
-      if (currentIs('(')) {
-        tokens.add(Token(TokenType.OPENING_PAREN))
-      } else if (currentIs(')')) {
-        tokens.add(Token(TokenType.CLOSING_PAREN))
-      } else if (currentIs('{')) {
-        tokens.add(Token(TokenType.OPENING_CURLY))
-      } else if (currentIs('}')) {
-        tokens.add(Token(TokenType.CLOSING_CURLY))
-      } else if (currentIs(';')) {
-        tokens.add(Token(TokenType.SEMICOLON))
-      } else if (currentIs(':')) {
-        tokens.add(Token(TokenType.COLON))
-      } else if (currentIs(',')) {
-        tokens.add(Token(TokenType.COMMA))
-      } else if (currentIs('+')) {
-        tokens.add(Token(TokenType.PLUS))
-      } else if (currentIs('-')) {
-        tokens.add(Token(TokenType.MINUS))
-      } else if (currentIs('*')) {
-        tokens.add(Token(TokenType.STAR))
-      } else if (currentIs('*')) {
-        tokens.add(Token(TokenType.SLASH))
-      } else if (currentIs('\"')) {
-        parseString()
-      } else if (current().isLetter()) {
-        parseSymbol()
-      } else if (!current().isWhitespace()) {
-        error("Unrecognized token at position $i: ${input[i]}")
+fun tokenize(input: String): List<Token> {
+  if (input.isEmpty()) {
+    return listOf(Token(TokenType.END))
+  }
+  TOKEN_PATTERNS.forEach { (regex, tokenType) ->
+    regex.matchAt(input, 0)?.let { result ->
+      val nextTokens = tokenize(input.substring(result.value.length))
+      if (tokenType == null) {
+        return nextTokens
       }
-      next()
+      val token = Token(tokenType, result.value)
+      return listOf(token) + nextTokens
     }
-
-    return tokens
   }
-
-  private fun current(): Char {
-    return input[i]
-  }
-
-  private fun currentIs(char: Char): Boolean {
-    return current() == char
-  }
-
-  private fun next(): Char? {
-    i++
-    if (inBound()) {
-      return current()
-    }
-    return null
-  }
-
-  private fun prev(): Char {
-    i--
-    return current()
-  }
-
-  private fun inBound(): Boolean {
-    return i < input.length
-  }
-
-  private fun clearBuffer() {
-    buffer = ""
-  }
-
-  private fun appendBuffer(char: Char) {
-    buffer += char
-  }
-
-  private fun bufferIs(check: String): Boolean {
-    return buffer == check
-  }
-
-  private fun parseString() {
-    // TODO(tla): cannot escape double quotes in strings yet
-    while (next() != '\"') {
-      buffer += current()
-    }
-    tokens.add(Token(TokenType.STRING, buffer))
-    clearBuffer()
-  }
-
-  private fun parseSymbol() {
-    do {
-      appendBuffer(current())
-    } while (next()?.isLetterOrDigit() == true)
-
-    if (bufferIs("fun")) {
-      tokens.add(Token(TokenType.FUNCTION_KEY, buffer))
-    } else {
-      tokens.add(Token(TokenType.SYMBOL, buffer))
-    }
-
-    clearBuffer()
-    prev()
-  }
+  error("Unrecognized Token at \"$input\"")
 }
