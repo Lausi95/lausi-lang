@@ -1,5 +1,8 @@
 package lausilang
 
+/**
+ * Type of token.
+ */
 enum class TokenType {
   INTEGER,
   SYMBOL,
@@ -19,11 +22,18 @@ enum class TokenType {
   END,
 }
 
-data class Token(val type: TokenType, val value: String?) {
-  constructor(type: TokenType): this(type, null)
+/**
+ * A token in a string. Consists of a type and a value.
+ * The value might be null.
+ *
+ * @param type Type of token
+ * @param value Value of the token as a String
+ */
+data class Token(val type: TokenType, val value: String) {
+  constructor(type: TokenType): this(type, "")
 }
 
-val TOKEN_PATTERNS = mapOf(
+private val TOKEN_PATTERNS = mapOf(
   "^\\s".toRegex() to null,
   "^//.*".toRegex() to null,
   "^\\d+".toRegex() to TokenType.INTEGER,
@@ -43,19 +53,25 @@ val TOKEN_PATTERNS = mapOf(
   "^\\w+".toRegex() to TokenType.SYMBOL,
 )
 
+/**
+ * Tokenizes the given string and transforms it to a list of tokens.
+ *
+ * @param input The string to tokenize
+ * @return The list of tokens parsed from the given string
+ */
 fun tokenize(input: String): List<Token> {
   if (input.isEmpty()) {
     return listOf(Token(TokenType.END))
   }
+
   TOKEN_PATTERNS.forEach { (regex, tokenType) ->
     regex.matchAt(input, 0)?.let { result ->
       val nextTokens = tokenize(input.substring(result.value.length))
-      if (tokenType == null) {
-        return nextTokens
-      }
-      val token = Token(tokenType, result.value)
-      return listOf(token) + nextTokens
+      return tokenType?.let {
+        listOf(Token(tokenType, result.value)) + nextTokens
+      } ?: nextTokens
     }
   }
+
   error("Unrecognized Token at \"$input\"")
 }
