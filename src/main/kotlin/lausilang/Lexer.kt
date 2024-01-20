@@ -19,6 +19,7 @@ enum class TokenType {
   COMMA,
   COLON,
   DOT,
+  EQUAL,
   END,
 }
 
@@ -51,6 +52,7 @@ private val TOKEN_PATTERNS = mapOf(
   "^\\*".toRegex() to TokenType.STAR,
   "^/".toRegex() to TokenType.SLASH,
   "^\\w+".toRegex() to TokenType.SYMBOL,
+  "^=".toRegex() to TokenType.EQUAL,
 )
 
 /**
