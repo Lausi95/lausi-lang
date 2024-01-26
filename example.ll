@@ -1,8 +1,4 @@
-
-fun main() {
-  print("Hallo, Welt");
-}
-
-fun add(i: int, b: int): int {
-  return a + b;
-}
+a = 1;
+b = 2;
+d = a + b + 3;
+print(d + 4);

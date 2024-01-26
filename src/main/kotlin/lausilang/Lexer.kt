@@ -4,6 +4,8 @@ package lausilang
  * Type of token.
  */
 enum class TokenType {
+  FUN,
+  PRINT,
   INTEGER,
   SYMBOL,
   OPENING_PAREN,
@@ -32,6 +34,8 @@ enum class TokenType {
  */
 data class Token(val type: TokenType, val value: String) {
   constructor(type: TokenType): this(type, "")
+
+  fun isType(type: TokenType) = type == this.type
 }
 
 private val TOKEN_PATTERNS = mapOf(
@@ -51,6 +55,8 @@ private val TOKEN_PATTERNS = mapOf(
   "^-".toRegex() to TokenType.MINUS,
   "^\\*".toRegex() to TokenType.STAR,
   "^/".toRegex() to TokenType.SLASH,
+  "^fun".toRegex() to TokenType.FUN,
+  "^print".toRegex() to TokenType.PRINT,
   "^\\w+".toRegex() to TokenType.SYMBOL,
   "^=".toRegex() to TokenType.EQUAL,
 )
