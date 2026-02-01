@@ -2,7 +2,8 @@ package lausilang.parser
 
 import lausilang.ast.Expression
 import lausilang.ast.ExpressionStatement
-import lausilang.ast.Identifier
+import lausilang.ast.IdentifierExpression
+import lausilang.ast.IntegerExpression
 import lausilang.ast.LetStatement
 import lausilang.ast.NullExpression
 import lausilang.ast.Program
@@ -41,6 +42,7 @@ class Parser(private val lexer: Lexer) {
         peekToken = lexer.nextToken()
 
         prefixParseFns[TokenType.IDENTIFIER] = this::parseIdentifierExpression
+        prefixParseFns[TokenType.INTEGER] = this::parseIntegerExpression
     }
 
     fun parseProgram(): Program {
@@ -74,7 +76,7 @@ class Parser(private val lexer: Lexer) {
             return null
         }
 
-        val name = Identifier(currentToken.literal)
+        val name = IdentifierExpression(currentToken.literal)
 
         if (!expectPeek(TokenType.ASSIGN)) {
             return null
@@ -110,7 +112,11 @@ class Parser(private val lexer: Lexer) {
     }
 
     private fun parseIdentifierExpression(): Expression {
-        return Identifier(currentToken.literal)
+        return IdentifierExpression(currentToken.literal)
+    }
+
+    private fun parseIntegerExpression(): Expression {
+        return IntegerExpression(currentToken.literal.toInt())
     }
 
     private fun currentTokenIs(type: TokenType) = currentToken.type == type

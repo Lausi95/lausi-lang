@@ -1,7 +1,8 @@
 package lausilang.parser
 
 import lausilang.ast.ExpressionStatement
-import lausilang.ast.Identifier
+import lausilang.ast.IdentifierExpression
+import lausilang.ast.IntegerExpression
 import lausilang.ast.LetStatement
 import lausilang.ast.ReturnStatement
 import lausilang.lexer.Lexer
@@ -79,10 +80,26 @@ class ParserTest {
         val expressionStatement = program.statements[0]
         assertTrue(expressionStatement is ExpressionStatement)
 
-        assertTrue(expressionStatement.expression is Identifier, "Expression is no identifier")
+        assertTrue(expressionStatement.expression is IdentifierExpression, "Expression is no identifier")
         assertEquals("foobar", expressionStatement.expression.name)
     }
 
+    @Test
+    fun parseIntegerExpression() {
+        val code = "5;"
+
+        val lexer = Lexer(code)
+        val parser = Parser(lexer)
+        val program = parser.parseProgram()
+        assertNoParseErrors(parser)
+
+        assertEquals(1, program.statements.size)
+        val expressionStatement = program.statements[0]
+        assertTrue(expressionStatement is ExpressionStatement)
+
+        assertTrue(expressionStatement.expression is IntegerExpression, "Expression is no IntegerExpression")
+        assertEquals(5, expressionStatement.expression.value)
+    }
 }
 
 fun assertNoParseErrors(parser: Parser) {
