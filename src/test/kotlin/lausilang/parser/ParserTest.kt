@@ -1,10 +1,14 @@
 package lausilang.parser
 
+import lausilang.ast.ExpressionStatement
+import lausilang.ast.Identifier
 import lausilang.ast.LetStatement
 import lausilang.ast.ReturnStatement
 import lausilang.lexer.Lexer
-import org.junit.jupiter.api.Assertions.*
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.fail
 
 class ParserTest {
 
@@ -58,9 +62,31 @@ class ParserTest {
         val parser = Parser(lexer)
         parser.parseProgram()
 
-        assertEquals(3, parser.errors.size)
+        assertEquals(1, parser.errors.size)
         assertEquals("Expected next token to be of type: ASSIGN, but is INTEGER", parser.errors[0])
-        assertEquals("Could not parse statement.", parser.errors[1])
-        assertEquals("Could not parse statement.", parser.errors[2])
+    }
+
+    @Test
+    fun parseIdentifierExpression() {
+        val code = "foobar;"
+
+        val lexer = Lexer(code)
+        val parser = Parser(lexer)
+        val program = parser.parseProgram()
+        assertNoParseErrors(parser)
+
+        assertEquals(1, program.statements.size)
+        val expressionStatement = program.statements[0]
+        assertTrue(expressionStatement is ExpressionStatement)
+
+        assertTrue(expressionStatement.expression is Identifier, "Expression is no identifier")
+        assertEquals("foobar", expressionStatement.expression.name)
+    }
+
+}
+
+fun assertNoParseErrors(parser: Parser) {
+    if (parser.errors.isNotEmpty()) {
+        fail("Expected no parse errors. But got ${parser.errors.size} errors:\n${parser.errors.joinToString("\n")}")
     }
 }

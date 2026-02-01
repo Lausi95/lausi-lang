@@ -1,5 +1,7 @@
 package lausilang.parser
 
+import lausilang.ast.Expression
+import lausilang.ast.ExpressionStatement
 import lausilang.ast.Identifier
 import lausilang.ast.LetStatement
 import lausilang.ast.NullExpression
@@ -10,16 +12,35 @@ import lausilang.lexer.Lexer
 import lausilang.token.Token
 import lausilang.token.TokenType
 
+typealias PrefixParseFn = () -> Expression
+typealias InfixParseFn = (Expression) -> Expression
+
+object Precedence {
+    const val LOWEST = 0
+    const val EQUALS = 1
+    const val LESS_GREATER = 2
+    const val SUM = 3
+    const val PRODUCT = 4
+    const val PREFIX = 5
+    const val CALL = 6
+}
+
 class Parser(private val lexer: Lexer) {
     private var currentToken: Token
     private var peekToken: Token
     private val statements: MutableList<Statement> = mutableListOf()
+
+    private val prefixParseFns: MutableMap<TokenType, PrefixParseFn> = mutableMapOf()
+    private val infixParseFns: MutableMap<TokenType, InfixParseFn> = mutableMapOf()
+
     private val _errors: MutableList<String> = mutableListOf()
     val errors: List<String> get() = _errors
 
     init {
         currentToken = lexer.nextToken()
         peekToken = lexer.nextToken()
+
+        prefixParseFns[TokenType.IDENTIFIER] = this::parseIdentifierExpression
     }
 
     fun parseProgram(): Program {
@@ -45,10 +66,7 @@ class Parser(private val lexer: Lexer) {
     private fun parseStatement(): Statement? = when(currentToken.type) {
         TokenType.LET -> parseLetStatement()
         TokenType.RETURN -> parseReturnStatement()
-        else -> {
-            _errors.add("Could not parse statement.")
-            null
-        }
+        else -> parseExpressionStatement()
     }
 
     private fun parseLetStatement(): Statement? {
@@ -69,12 +87,30 @@ class Parser(private val lexer: Lexer) {
         return LetStatement(name, NullExpression())
     }
 
-    private fun parseReturnStatement(): Statement? {
+    private fun parseReturnStatement(): Statement {
         while(!currentTokenIs(TokenType.SEMICOLON)) {
             nextToken()
         }
 
         return ReturnStatement(NullExpression())
+    }
+
+    private fun parseExpressionStatement(): Statement? {
+        val expression = parseExpression(Precedence.LOWEST) ?: return null
+        expectPeek(TokenType.SEMICOLON)
+        return ExpressionStatement(expression)
+    }
+
+    private fun parseExpression(precedence: Int): Expression? {
+        val prefixParseFn = prefixParseFns[currentToken.type] ?: return null
+
+        val leftExpression = prefixParseFn()
+
+        return leftExpression
+    }
+
+    private fun parseIdentifierExpression(): Expression {
+        return Identifier(currentToken.literal)
     }
 
     private fun currentTokenIs(type: TokenType) = currentToken.type == type
