@@ -15,7 +15,7 @@ class ExpressionStatement(
 }
 
 class LetStatement(
-    val name: IdentifierExpression,
+    val name: Identifier,
     val value: Expression,
 ) : Statement {
     override fun format() = "let ${name.name} = ${value.format()};"
@@ -27,16 +27,23 @@ class ReturnStatement(
     override fun format() = "return ${returnValue.format()};"
 }
 
-class IdentifierExpression(
+class Identifier(
     val name: String,
 ): Expression {
     override fun format() = name
 }
 
-class IntegerExpression(
+class IntegerLiteral(
     val value: Int,
 ) : Expression {
     override fun format() = value.toString()
+}
+
+class PrefixExpression(
+    val operator: String,
+    val right: Expression
+) : Expression {
+    override fun format() = "$operator${right.format()}"
 }
 
 class NullExpression : Expression {

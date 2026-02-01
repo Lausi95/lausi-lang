@@ -2,10 +2,11 @@ package lausilang.parser
 
 import lausilang.ast.Expression
 import lausilang.ast.ExpressionStatement
-import lausilang.ast.IdentifierExpression
-import lausilang.ast.IntegerExpression
+import lausilang.ast.Identifier
+import lausilang.ast.IntegerLiteral
 import lausilang.ast.LetStatement
 import lausilang.ast.NullExpression
+import lausilang.ast.PrefixExpression
 import lausilang.ast.Program
 import lausilang.ast.ReturnStatement
 import lausilang.ast.Statement
@@ -13,8 +14,8 @@ import lausilang.lexer.Lexer
 import lausilang.token.Token
 import lausilang.token.TokenType
 
-typealias PrefixParseFn = () -> Expression
-typealias InfixParseFn = (Expression) -> Expression
+typealias PrefixParseFn = () -> Expression?
+typealias InfixParseFn = (Expression) -> Expression?
 
 object Precedence {
     const val LOWEST = 0
@@ -43,6 +44,8 @@ class Parser(private val lexer: Lexer) {
 
         prefixParseFns[TokenType.IDENTIFIER] = this::parseIdentifierExpression
         prefixParseFns[TokenType.INTEGER] = this::parseIntegerExpression
+        prefixParseFns[TokenType.BANG] = this::parsePrefixExpression
+        prefixParseFns[TokenType.MINUS] = this::parsePrefixExpression
     }
 
     fun parseProgram(): Program {
@@ -76,7 +79,7 @@ class Parser(private val lexer: Lexer) {
             return null
         }
 
-        val name = IdentifierExpression(currentToken.literal)
+        val name = Identifier(currentToken.literal)
 
         if (!expectPeek(TokenType.ASSIGN)) {
             return null
@@ -104,7 +107,11 @@ class Parser(private val lexer: Lexer) {
     }
 
     private fun parseExpression(precedence: Int): Expression? {
-        val prefixParseFn = prefixParseFns[currentToken.type] ?: return null
+        val prefixParseFn = prefixParseFns[currentToken.type]
+        if (prefixParseFn == null) {
+            _errors.add("No prefix parser for operation '${currentToken.literal}' found.")
+            return null
+        }
 
         val leftExpression = prefixParseFn()
 
@@ -112,11 +119,22 @@ class Parser(private val lexer: Lexer) {
     }
 
     private fun parseIdentifierExpression(): Expression {
-        return IdentifierExpression(currentToken.literal)
+        return Identifier(currentToken.literal)
     }
 
     private fun parseIntegerExpression(): Expression {
-        return IntegerExpression(currentToken.literal.toInt())
+        return IntegerLiteral(currentToken.literal.toInt())
+    }
+
+    private fun parsePrefixExpression(): Expression? {
+        val operator = currentToken.literal
+        nextToken()
+        val rightExpression = parseExpression(Precedence.PREFIX)
+        if (rightExpression == null) {
+            _errors.add("Could not parse right operation.")
+            return null
+        }
+        return PrefixExpression(operator, rightExpression)
     }
 
     private fun currentTokenIs(type: TokenType) = currentToken.type == type

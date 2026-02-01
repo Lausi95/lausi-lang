@@ -1,10 +1,13 @@
 package lausilang.parser
 
+import lausilang.ast.Expression
 import lausilang.ast.ExpressionStatement
-import lausilang.ast.IdentifierExpression
-import lausilang.ast.IntegerExpression
+import lausilang.ast.Identifier
+import lausilang.ast.IntegerLiteral
 import lausilang.ast.LetStatement
+import lausilang.ast.PrefixExpression
 import lausilang.ast.ReturnStatement
+import lausilang.ast.Statement
 import lausilang.lexer.Lexer
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -77,11 +80,9 @@ class ParserTest {
         assertNoParseErrors(parser)
 
         assertEquals(1, program.statements.size)
-        val expressionStatement = program.statements[0]
-        assertTrue(expressionStatement is ExpressionStatement)
-
-        assertTrue(expressionStatement.expression is IdentifierExpression, "Expression is no identifier")
-        assertEquals("foobar", expressionStatement.expression.name)
+        program.statements[0].assertExpressionStatement {
+            it.expression.assertIdentifier("foobar")
+        }
     }
 
     @Test
@@ -94,11 +95,43 @@ class ParserTest {
         assertNoParseErrors(parser)
 
         assertEquals(1, program.statements.size)
-        val expressionStatement = program.statements[0]
-        assertTrue(expressionStatement is ExpressionStatement)
+        program.statements[0].assertExpressionStatement {
+            it.expression.assertIntegerLiteral(5)
+        }
+    }
 
-        assertTrue(expressionStatement.expression is IntegerExpression, "Expression is no IntegerExpression")
-        assertEquals(5, expressionStatement.expression.value)
+    @Test
+    fun parseBangPrefixExpression() {
+        val code = "!5;"
+
+        val lexer = Lexer(code)
+        val parser = Parser(lexer)
+        val program = parser.parseProgram()
+        assertNoParseErrors(parser)
+
+        assertEquals(1, program.statements.size)
+        program.statements[0].assertExpressionStatement { expressionStatement ->
+            expressionStatement.expression.assertOperatorExpression("!") { operatorExpression ->
+                operatorExpression.right.assertIntegerLiteral(5)
+            }
+        }
+    }
+
+    @Test
+    fun parseNegativePrefixExpression() {
+        val code = "-15;"
+
+        val lexer = Lexer(code)
+        val parser = Parser(lexer)
+        val program = parser.parseProgram()
+        assertNoParseErrors(parser)
+
+        assertEquals(1, program.statements.size)
+        program.statements[0].assertExpressionStatement { expressionStatement ->
+            expressionStatement.expression.assertOperatorExpression("-") { operatorExpression ->
+                operatorExpression.right.assertIntegerLiteral(15)
+            }
+        }
     }
 }
 
@@ -106,4 +139,27 @@ fun assertNoParseErrors(parser: Parser) {
     if (parser.errors.isNotEmpty()) {
         fail("Expected no parse errors. But got ${parser.errors.size} errors:\n${parser.errors.joinToString("\n")}")
     }
+}
+
+fun Statement.assertExpressionStatement(onSuccess: (ExpressionStatement) -> Unit = {}) {
+    assertTrue(this is ExpressionStatement, "Expected Statement to be ExpressionStatement, got ${this::class.simpleName}")
+    onSuccess(this)
+}
+
+fun Expression.assertIntegerLiteral(expectedValue: Int, onSuccess: (IntegerLiteral) -> Unit = {}) {
+    assertTrue(this is IntegerLiteral, "Expected Expression to be IntegerLiteral, got ${this::class.simpleName}")
+    assertEquals(expectedValue, this.value, "Expected integer literal value '$expectedValue', got ${this.value}")
+    onSuccess(this)
+}
+
+fun Expression.assertIdentifier(expectedValue: String, onSuccess: (Identifier) -> Unit = {}) {
+    assertTrue(this is Identifier, "Expected Expression to be Identifier, got ${this::class.simpleName}")
+    assertEquals(expectedValue, this.name, "Expected identifier name '$expectedValue', got '${this.name}'")
+    onSuccess(this)
+}
+
+fun Expression.assertOperatorExpression(expectedOperator: String, onSuccess: (PrefixExpression) -> Unit = {}) {
+    assertTrue(this is PrefixExpression, "Expected Expression to be PrefixExpression, got ${this::class.simpleName}")
+    assertEquals(expectedOperator, this.operator, "Expected operator to be '$expectedOperator', got '${this.operator}'")
+    onSuccess(this)
 }
