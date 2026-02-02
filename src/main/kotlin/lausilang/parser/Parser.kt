@@ -60,6 +60,7 @@ class Parser(private val lexer: Lexer) {
         prefixParseFns[TokenType.FALSE] = this::parseBooleanLiteral
         prefixParseFns[TokenType.BANG] = this::parsePrefixExpression
         prefixParseFns[TokenType.MINUS] = this::parsePrefixExpression
+        prefixParseFns[TokenType.LPAREN] = this::parseGroupedExpression
 
         infixParseFns[TokenType.PLUS] = this::parseInfixExpression
         infixParseFns[TokenType.MINUS] = this::parseInfixExpression
@@ -146,7 +147,7 @@ class Parser(private val lexer: Lexer) {
 
         var leftExpression = prefixParseFn() ?: return null
 
-        while (!peekTokenIs(TokenType.SEMICOLON) && precedence < peekPrecedence()) {
+        while (precedence < peekPrecedence()) {
             val infixParseFn = infixParseFns[peekToken.type] ?: return leftExpression
             nextToken()
             leftExpression = infixParseFn(leftExpression) ?: return null
@@ -191,6 +192,15 @@ class Parser(private val lexer: Lexer) {
         }
 
         return InfixExpression(operator, left, right)
+    }
+
+    private fun parseGroupedExpression(): Expression? {
+        nextToken()
+        val expression = parseExpression(Precedence.LOWEST)
+        if (!expectPeek(TokenType.RPAREN)) {
+            return null
+        }
+        return expression
     }
 
     private fun currentTokenIs(type: TokenType) = currentToken.type == type

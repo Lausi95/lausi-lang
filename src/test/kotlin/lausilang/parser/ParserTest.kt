@@ -232,6 +232,20 @@ class ParserTest {
             assertEquals("((5) + ((10) * (3))) == ((((-(5)) * (10)) / (3)) + ((5) * (3)))", program.statements[0].format())
         }
     }
+
+    @Test
+    fun parseUngroupedExpression() {
+        withParsedProgram("5 + 5 * 3;") { program ->
+            assertEquals("(5) + ((5) * (3))", program.statements[0].format())
+        }
+    }
+
+    @Test
+    fun parseGroupedExpression() {
+        withParsedProgram("(5 + 5) * 3;") { program ->
+            assertEquals("(((5) + (5)) * (3)", program.statements[0].format())
+        }
+    }
 }
 
 fun withParsedProgram(code: String, statements: Int = 1, onSuccess: (Program) -> Unit) {
