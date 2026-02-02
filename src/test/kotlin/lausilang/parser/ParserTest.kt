@@ -49,7 +49,7 @@ class ParserTest {
         val code = """
             let x = 5;
             let y = 10;
-            let foobar = 13123124421;
+            let foobar = 13124421;
         """.trimIndent()
 
         val lexer = Lexer(code)

@@ -106,19 +106,27 @@ class Parser(private val lexer: Lexer) {
             return null
         }
 
-        while(!currentTokenIs(TokenType.SEMICOLON)) {
-            nextToken()
+        nextToken()
+
+        val expression = parseExpression(Precedence.LOWEST)
+        if (expression == null) {
+            _errors.add("Could not parse expression")
+            return null
         }
 
-        return LetStatement(name, NullExpression())
+        return LetStatement(name, expression)
     }
 
-    private fun parseReturnStatement(): Statement {
-        while(!currentTokenIs(TokenType.SEMICOLON)) {
-            nextToken()
+    private fun parseReturnStatement(): Statement? {
+        nextToken()
+
+        val expression = parseExpression(Precedence.LOWEST)
+        if (expression == null) {
+            _errors.add("Could not parse expression")
+            return null
         }
 
-        return ReturnStatement(NullExpression())
+        return ReturnStatement(expression)
     }
 
     private fun parseExpressionStatement(): Statement? {
