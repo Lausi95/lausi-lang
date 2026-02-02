@@ -1,9 +1,11 @@
 package lausilang.parser
 
+import lausilang.ast.BlockStatement
 import lausilang.ast.BooleanLiteral
 import lausilang.ast.Expression
 import lausilang.ast.ExpressionStatement
 import lausilang.ast.Identifier
+import lausilang.ast.IfExpression
 import lausilang.ast.InfixExpression
 import lausilang.ast.IntegerLiteral
 import lausilang.ast.LetStatement
@@ -61,6 +63,7 @@ class Parser(private val lexer: Lexer) {
         prefixParseFns[TokenType.BANG] = this::parsePrefixExpression
         prefixParseFns[TokenType.MINUS] = this::parsePrefixExpression
         prefixParseFns[TokenType.LPAREN] = this::parseGroupedExpression
+        prefixParseFns[TokenType.IF] = this::parseIfExpression
 
         infixParseFns[TokenType.PLUS] = this::parseInfixExpression
         infixParseFns[TokenType.MINUS] = this::parseInfixExpression
@@ -95,6 +98,7 @@ class Parser(private val lexer: Lexer) {
     private fun parseStatement(): Statement? = when(currentToken.type) {
         TokenType.LET -> parseLetStatement()
         TokenType.RETURN -> parseReturnStatement()
+        TokenType.LBRACE -> parseBlockStatement()
         else -> parseExpressionStatement()
     }
 
@@ -136,6 +140,53 @@ class Parser(private val lexer: Lexer) {
         val expression = parseExpression(Precedence.LOWEST) ?: return null
         expectPeek(TokenType.SEMICOLON)
         return ExpressionStatement(expression)
+    }
+
+    private fun parseBlockStatement(): Statement {
+        nextToken()
+        val statements = mutableListOf<Statement>()
+        while (!currentTokenIs(TokenType.RBRACE)) {
+            parseStatement()?.also {
+                statements.add(it)
+            }
+            nextToken()
+        }
+        return BlockStatement(statements)
+    }
+
+    private fun parseIfExpression(): Expression? {
+        if (!expectPeek(TokenType.LPAREN)) {
+            return null
+        }
+        nextToken()
+
+        val condition = parseExpression(Precedence.LOWEST)
+        if (condition == null) {
+            _errors.add("If statement has no condition")
+            return null
+        }
+
+        if (!expectPeek(TokenType.RPAREN)) {
+            return null
+        }
+
+        nextToken()
+
+        val consequence = parseStatement()
+        if (consequence == null) {
+            _errors.add("If statement has no valid then block")
+            return null
+        }
+
+        if (!peekTokenIs(TokenType.ELSE)) {
+            return IfExpression(condition, consequence, null)
+        }
+        nextToken()
+        nextToken()
+
+        val alternative = parseStatement()
+
+        return IfExpression(condition, consequence, alternative)
     }
 
     private fun parseExpression(precedence: Int): Expression? {

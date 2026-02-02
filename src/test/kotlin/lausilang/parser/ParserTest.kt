@@ -1,9 +1,11 @@
 package lausilang.parser
 
+import lausilang.ast.BlockStatement
 import lausilang.ast.BooleanLiteral
 import lausilang.ast.Expression
 import lausilang.ast.ExpressionStatement
 import lausilang.ast.Identifier
+import lausilang.ast.IfExpression
 import lausilang.ast.InfixExpression
 import lausilang.ast.IntegerLiteral
 import lausilang.ast.LetStatement
@@ -14,6 +16,8 @@ import lausilang.ast.Statement
 import lausilang.lexer.Lexer
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -243,7 +247,54 @@ class ParserTest {
     @Test
     fun parseGroupedExpression() {
         withParsedProgram("(5 + 5) * 3;") { program ->
-            assertEquals("(((5) + (5)) * (3)", program.statements[0].format())
+            assertEquals("((5) + (5)) * (3)", program.statements[0].format())
+        }
+    }
+
+    @Test
+    fun parseFullIfStatement() {
+        withParsedProgram("""
+            if (a > b) {
+                a;
+            } else {
+                b;
+            };
+        """.trimIndent()) { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertIfExpression { ifExpression ->
+                    ifExpression.consequence.assertBlockStatement { blockStatement ->
+                        blockStatement.statements[0].assertExpressionStatement {
+                            it.expression.assertIdentifier("a")
+                        }
+                    }
+                    assertNotNull(ifExpression.alternative)
+                    ifExpression.alternative.assertBlockStatement { blockStatement ->
+                        blockStatement.statements[0].assertExpressionStatement {
+                            it.expression.assertIdentifier("b")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun parseIfStatementWithNoElse() {
+        withParsedProgram("""
+            if (a > b) {
+                a;
+            };
+        """.trimIndent()) { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertIfExpression { ifExpression ->
+                    ifExpression.consequence.assertBlockStatement { blockStatement ->
+                        blockStatement.statements[0].assertExpressionStatement {
+                            it.expression.assertIdentifier("a")
+                        }
+                    }
+                    assertNull(ifExpression.alternative)
+                }
+            }
         }
     }
 }
@@ -295,5 +346,15 @@ fun Expression.assertOperatorExpression(expectedOperator: String, onSuccess: (Pr
 fun Expression.assertInfixExpression(expectedOperator: String, onSuccess: (InfixExpression) -> Unit = {}) {
     assertTrue(this is InfixExpression, "Expected Expression to be InfixExpression, got ${this::class.simpleName}")
     assertEquals(expectedOperator, this.operator, "Expected operator to be '$expectedOperator', got '${this.operator}'")
+    onSuccess(this)
+}
+
+fun Statement.assertBlockStatement(onSuccess: (BlockStatement) -> Unit = {}) {
+    assertTrue(this is BlockStatement, "Expected Statement to be BlockStatement, got ${this::class.simpleName}")
+    onSuccess(this)
+}
+
+fun Expression.assertIfExpression(onSuccess: (IfExpression) -> Unit = {}) {
+    assertTrue(this is IfExpression, "Expected Expression to be IfExpression, got ${this::class.simpleName}")
     onSuccess(this)
 }

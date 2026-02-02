@@ -1,5 +1,7 @@
 package lausilang.ast
 
+import javax.swing.plaf.nimbus.State
+
 interface Node {
     fun format(): String
 }
@@ -25,6 +27,22 @@ class ReturnStatement(
     val returnValue: Expression,
 ): Statement {
     override fun format() = "return ${returnValue.format()};"
+}
+
+class BlockStatement(
+    val statements: List<Statement>
+): Statement {
+    override fun format() = "{\n" + statements.joinToString("\n    ") { it.format() } + "\n}"
+}
+
+class IfExpression(
+    val condition: Expression,
+    val consequence: Statement,
+    val alternative: Statement?
+): Expression {
+    override fun format(): String {
+        return "if (${condition.format()}) ${consequence.format()}" + (alternative?.let { " else ${it.format()} " } ?: "")
+    }
 }
 
 class Identifier(
