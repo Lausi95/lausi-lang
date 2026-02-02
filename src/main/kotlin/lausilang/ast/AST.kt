@@ -39,6 +39,12 @@ class IntegerLiteral(
     override fun format() = value.toString()
 }
 
+class BooleanLiteral(
+    val value: Boolean,
+): Expression {
+    override fun format() = value.toString()
+}
+
 class PrefixExpression(
     val operator: String,
     val right: Expression

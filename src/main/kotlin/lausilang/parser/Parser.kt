@@ -1,12 +1,12 @@
 package lausilang.parser
 
+import lausilang.ast.BooleanLiteral
 import lausilang.ast.Expression
 import lausilang.ast.ExpressionStatement
 import lausilang.ast.Identifier
 import lausilang.ast.InfixExpression
 import lausilang.ast.IntegerLiteral
 import lausilang.ast.LetStatement
-import lausilang.ast.NullExpression
 import lausilang.ast.PrefixExpression
 import lausilang.ast.Program
 import lausilang.ast.ReturnStatement
@@ -55,7 +55,9 @@ class Parser(private val lexer: Lexer) {
         peekToken = lexer.nextToken()
 
         prefixParseFns[TokenType.IDENTIFIER] = this::parseIdentifierExpression
-        prefixParseFns[TokenType.INTEGER] = this::parseIntegerExpression
+        prefixParseFns[TokenType.INTEGER] = this::parseIntegerLiteral
+        prefixParseFns[TokenType.TRUE] = this::parseBooleanLiteral
+        prefixParseFns[TokenType.FALSE] = this::parseBooleanLiteral
         prefixParseFns[TokenType.BANG] = this::parsePrefixExpression
         prefixParseFns[TokenType.MINUS] = this::parsePrefixExpression
 
@@ -157,8 +159,12 @@ class Parser(private val lexer: Lexer) {
         return Identifier(currentToken.literal)
     }
 
-    private fun parseIntegerExpression(): Expression {
+    private fun parseIntegerLiteral(): Expression {
         return IntegerLiteral(currentToken.literal.toInt())
+    }
+
+    private fun parseBooleanLiteral(): Expression {
+        return BooleanLiteral(currentToken.type == TokenType.TRUE)
     }
 
     private fun parsePrefixExpression(): Expression? {

@@ -1,5 +1,6 @@
 package lausilang.parser
 
+import lausilang.ast.BooleanLiteral
 import lausilang.ast.Expression
 import lausilang.ast.ExpressionStatement
 import lausilang.ast.Identifier
@@ -81,7 +82,7 @@ class ParserTest {
     }
 
     @Test
-    fun parseIntegerExpression() {
+    fun parseIntegerLiteral() {
         withParsedProgram("5;") { program ->
             program.statements[0].assertExpressionStatement {
                 it.expression.assertIntegerLiteral(5)
@@ -208,6 +209,24 @@ class ParserTest {
     }
 
     @Test
+    fun parseTrueBooleanLiteral() {
+        withParsedProgram("true;") { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertBooleanLiteral(true)
+            }
+        }
+    }
+
+    @Test
+    fun parseFalseBooleanLiteral() {
+        withParsedProgram("false;") { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertBooleanLiteral(false)
+            }
+        }
+    }
+
+    @Test
     fun parseComplexExpression() {
         withParsedProgram("5 + 10 * 3 == -5 * 10 / 3 + 5 * 3;") { program ->
             assertEquals("((5) + ((10) * (3))) == ((((-(5)) * (10)) / (3)) + ((5) * (3)))", program.statements[0].format())
@@ -238,6 +257,12 @@ fun Statement.assertExpressionStatement(onSuccess: (ExpressionStatement) -> Unit
 fun Expression.assertIntegerLiteral(expectedValue: Int, onSuccess: (IntegerLiteral) -> Unit = {}) {
     assertTrue(this is IntegerLiteral, "Expected Expression to be IntegerLiteral, got ${this::class.simpleName}")
     assertEquals(expectedValue, this.value, "Expected integer literal value '$expectedValue', got ${this.value}")
+    onSuccess(this)
+}
+
+fun Expression.assertBooleanLiteral(expectedValue: Boolean, onSuccess: (BooleanLiteral) -> Unit = {}) {
+    assertTrue(this is BooleanLiteral, "Expected Expression to be BooleanLiteral, got ${this::class.simpleName}")
+    assertEquals(expectedValue, this.value, "Expected boolean literal value '$expectedValue', got ${this.value}")
     onSuccess(this)
 }
 
