@@ -3,6 +3,7 @@ package lausilang.parser
 import lausilang.ast.Expression
 import lausilang.ast.ExpressionStatement
 import lausilang.ast.Identifier
+import lausilang.ast.InfixExpression
 import lausilang.ast.IntegerLiteral
 import lausilang.ast.LetStatement
 import lausilang.ast.NullExpression
@@ -27,6 +28,17 @@ object Precedence {
     const val CALL = 6
 }
 
+val TOKEN_TYPE_PRECEDENCES: Map<TokenType, Int> = mapOf(
+    TokenType.EQ to Precedence.EQUALS,
+    TokenType.NEQ to Precedence.EQUALS,
+    TokenType.LT to Precedence.LESS_GREATER,
+    TokenType.GT to Precedence.LESS_GREATER,
+    TokenType.PLUS to Precedence.SUM,
+    TokenType.MINUS to Precedence.SUM,
+    TokenType.SLASH to Precedence.PRODUCT,
+    TokenType.ASTERISK to Precedence.PRODUCT,
+)
+
 class Parser(private val lexer: Lexer) {
     private var currentToken: Token
     private var peekToken: Token
@@ -46,6 +58,15 @@ class Parser(private val lexer: Lexer) {
         prefixParseFns[TokenType.INTEGER] = this::parseIntegerExpression
         prefixParseFns[TokenType.BANG] = this::parsePrefixExpression
         prefixParseFns[TokenType.MINUS] = this::parsePrefixExpression
+
+        infixParseFns[TokenType.PLUS] = this::parseInfixExpression
+        infixParseFns[TokenType.MINUS] = this::parseInfixExpression
+        infixParseFns[TokenType.ASTERISK] = this::parseInfixExpression
+        infixParseFns[TokenType.SLASH] = this::parseInfixExpression
+        infixParseFns[TokenType.EQ] = this::parseInfixExpression
+        infixParseFns[TokenType.NEQ] = this::parseInfixExpression
+        infixParseFns[TokenType.LT] = this::parseInfixExpression
+        infixParseFns[TokenType.GT] = this::parseInfixExpression
     }
 
     fun parseProgram(): Program {
@@ -113,7 +134,13 @@ class Parser(private val lexer: Lexer) {
             return null
         }
 
-        val leftExpression = prefixParseFn()
+        var leftExpression = prefixParseFn() ?: return null
+
+        while (!peekTokenIs(TokenType.SEMICOLON) && precedence < peekPrecedence()) {
+            val infixParseFn = infixParseFns[peekToken.type] ?: return leftExpression
+            nextToken()
+            leftExpression = infixParseFn(leftExpression) ?: return null
+        }
 
         return leftExpression
     }
@@ -137,6 +164,21 @@ class Parser(private val lexer: Lexer) {
         return PrefixExpression(operator, rightExpression)
     }
 
+    private fun parseInfixExpression(left: Expression): Expression? {
+        val operator = currentToken.literal
+        val precedence = currentPrecedence()
+
+        nextToken()
+
+        val right = parseExpression(precedence)
+        if (right == null) {
+            _errors.add("Could not parse right expression.")
+            return null
+        }
+
+        return InfixExpression(operator, left, right)
+    }
+
     private fun currentTokenIs(type: TokenType) = currentToken.type == type
 
     private fun peekTokenIs(type: TokenType) = peekToken.type == type
@@ -149,5 +191,13 @@ class Parser(private val lexer: Lexer) {
             _errors.add("Expected next token to be of type: ${type}, but is ${peekToken.type}")
             return false
         }
+    }
+
+    private fun currentPrecedence(): Int {
+        return TOKEN_TYPE_PRECEDENCES[currentToken.type] ?: Precedence.LOWEST
+    }
+
+    private fun peekPrecedence(): Int {
+        return TOKEN_TYPE_PRECEDENCES[peekToken.type] ?: Precedence.LOWEST
     }
 }

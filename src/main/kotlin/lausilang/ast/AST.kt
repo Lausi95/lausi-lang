@@ -43,7 +43,15 @@ class PrefixExpression(
     val operator: String,
     val right: Expression
 ) : Expression {
-    override fun format() = "$operator${right.format()}"
+    override fun format() = "$operator(${right.format()})"
+}
+
+class InfixExpression(
+    val operator: String,
+    val left: Expression,
+    val right: Expression,
+): Expression {
+    override fun format() = "(${left.format()}) $operator (${right.format()})"
 }
 
 class NullExpression : Expression {

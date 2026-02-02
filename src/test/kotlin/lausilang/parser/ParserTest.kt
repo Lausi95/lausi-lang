@@ -3,9 +3,11 @@ package lausilang.parser
 import lausilang.ast.Expression
 import lausilang.ast.ExpressionStatement
 import lausilang.ast.Identifier
+import lausilang.ast.InfixExpression
 import lausilang.ast.IntegerLiteral
 import lausilang.ast.LetStatement
 import lausilang.ast.PrefixExpression
+import lausilang.ast.Program
 import lausilang.ast.ReturnStatement
 import lausilang.ast.Statement
 import lausilang.lexer.Lexer
@@ -27,7 +29,6 @@ class ParserTest {
         assertEquals(1, program.statements.size)
         val statement = program.statements[0]
         assertTrue(statement is LetStatement)
-        statement as LetStatement
     }
 
     @Test
@@ -72,67 +73,155 @@ class ParserTest {
 
     @Test
     fun parseIdentifierExpression() {
-        val code = "foobar;"
-
-        val lexer = Lexer(code)
-        val parser = Parser(lexer)
-        val program = parser.parseProgram()
-        assertNoParseErrors(parser)
-
-        assertEquals(1, program.statements.size)
-        program.statements[0].assertExpressionStatement {
-            it.expression.assertIdentifier("foobar")
+        withParsedProgram("foobar;") { program ->
+            program.statements[0].assertExpressionStatement {
+                it.expression.assertIdentifier("foobar")
+            }
         }
     }
 
     @Test
     fun parseIntegerExpression() {
-        val code = "5;"
-
-        val lexer = Lexer(code)
-        val parser = Parser(lexer)
-        val program = parser.parseProgram()
-        assertNoParseErrors(parser)
-
-        assertEquals(1, program.statements.size)
-        program.statements[0].assertExpressionStatement {
-            it.expression.assertIntegerLiteral(5)
+        withParsedProgram("5;") { program ->
+            program.statements[0].assertExpressionStatement {
+                it.expression.assertIntegerLiteral(5)
+            }
         }
     }
 
     @Test
     fun parseBangPrefixExpression() {
-        val code = "!5;"
-
-        val lexer = Lexer(code)
-        val parser = Parser(lexer)
-        val program = parser.parseProgram()
-        assertNoParseErrors(parser)
-
-        assertEquals(1, program.statements.size)
-        program.statements[0].assertExpressionStatement { expressionStatement ->
-            expressionStatement.expression.assertOperatorExpression("!") { operatorExpression ->
-                operatorExpression.right.assertIntegerLiteral(5)
+        withParsedProgram("!5;") { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertOperatorExpression("!") { operatorExpression ->
+                    operatorExpression.right.assertIntegerLiteral(5)
+                }
             }
         }
     }
 
     @Test
     fun parseNegativePrefixExpression() {
-        val code = "-15;"
-
-        val lexer = Lexer(code)
-        val parser = Parser(lexer)
-        val program = parser.parseProgram()
-        assertNoParseErrors(parser)
-
-        assertEquals(1, program.statements.size)
-        program.statements[0].assertExpressionStatement { expressionStatement ->
-            expressionStatement.expression.assertOperatorExpression("-") { operatorExpression ->
-                operatorExpression.right.assertIntegerLiteral(15)
+        withParsedProgram("-15;") { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertOperatorExpression("-") { operatorExpression ->
+                    operatorExpression.right.assertIntegerLiteral(15)
+                }
             }
         }
     }
+
+    @Test
+    fun parsePlusInfixExpression() {
+        withParsedProgram("5 + 10;") { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertInfixExpression("+") { operatorExpression ->
+                    operatorExpression.left.assertIntegerLiteral(5)
+                    operatorExpression.right.assertIntegerLiteral(10)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun parseMinusInfixExpression() {
+        withParsedProgram("5 - 10;") { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertInfixExpression("-") { operatorExpression ->
+                    operatorExpression.left.assertIntegerLiteral(5)
+                    operatorExpression.right.assertIntegerLiteral(10)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun parseAsteriskInfixExpression() {
+        withParsedProgram("5 * 10;") { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertInfixExpression("*") { operatorExpression ->
+                    operatorExpression.left.assertIntegerLiteral(5)
+                    operatorExpression.right.assertIntegerLiteral(10)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun parseSlashInfixExpression() {
+        withParsedProgram("5 / 10;") { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertInfixExpression("/") { operatorExpression ->
+                    operatorExpression.left.assertIntegerLiteral(5)
+                    operatorExpression.right.assertIntegerLiteral(10)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun parseGtInfixExpression() {
+        withParsedProgram("5 > 10;") { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertInfixExpression(">") { operatorExpression ->
+                    operatorExpression.left.assertIntegerLiteral(5)
+                    operatorExpression.right.assertIntegerLiteral(10)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun parseLtInfixExpression() {
+        withParsedProgram("5 < 10;") { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertInfixExpression("<") { operatorExpression ->
+                    operatorExpression.left.assertIntegerLiteral(5)
+                    operatorExpression.right.assertIntegerLiteral(10)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun parseEqInfixExpression() {
+        withParsedProgram("5 == 10;") { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertInfixExpression("==") { operatorExpression ->
+                    operatorExpression.left.assertIntegerLiteral(5)
+                    operatorExpression.right.assertIntegerLiteral(10)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun parseNeqInfixExpression() {
+        withParsedProgram("5 != 10;") { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertInfixExpression("!=") { operatorExpression ->
+                    operatorExpression.left.assertIntegerLiteral(5)
+                    operatorExpression.right.assertIntegerLiteral(10)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun parseComplexExpression() {
+        withParsedProgram("5 + 10 * 3 == -5 * 10 / 3 + 5 * 3;") { program ->
+            assertEquals("((5) + ((10) * (3))) == ((((-(5)) * (10)) / (3)) + ((5) * (3)))", program.statements[0].format())
+        }
+    }
+}
+
+fun withParsedProgram(code: String, statements: Int = 1, onSuccess: (Program) -> Unit) {
+    val lexer = Lexer(code)
+    val parser = Parser(lexer)
+    val program = parser.parseProgram()
+    assertNoParseErrors(parser)
+    assertEquals(statements, program.statements.size)
+    onSuccess(program)
 }
 
 fun assertNoParseErrors(parser: Parser) {
@@ -160,6 +249,12 @@ fun Expression.assertIdentifier(expectedValue: String, onSuccess: (Identifier) -
 
 fun Expression.assertOperatorExpression(expectedOperator: String, onSuccess: (PrefixExpression) -> Unit = {}) {
     assertTrue(this is PrefixExpression, "Expected Expression to be PrefixExpression, got ${this::class.simpleName}")
+    assertEquals(expectedOperator, this.operator, "Expected operator to be '$expectedOperator', got '${this.operator}'")
+    onSuccess(this)
+}
+
+fun Expression.assertInfixExpression(expectedOperator: String, onSuccess: (InfixExpression) -> Unit = {}) {
+    assertTrue(this is InfixExpression, "Expected Expression to be InfixExpression, got ${this::class.simpleName}")
     assertEquals(expectedOperator, this.operator, "Expected operator to be '$expectedOperator', got '${this.operator}'")
     onSuccess(this)
 }
