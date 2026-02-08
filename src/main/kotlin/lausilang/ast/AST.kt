@@ -70,6 +70,13 @@ class PrefixExpression(
     override fun format() = "$operator(${right.format()})"
 }
 
+class FunctionLiteral(
+    val parameters: List<Identifier>,
+    val body: BlockStatement,
+): Expression {
+    override fun format() = "fn (${parameters.joinToString(", ") { it.format() }}) ${body.format()}"
+}
+
 class InfixExpression(
     val operator: String,
     val left: Expression,

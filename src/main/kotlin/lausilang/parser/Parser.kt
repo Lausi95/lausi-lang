@@ -4,6 +4,7 @@ import lausilang.ast.BlockStatement
 import lausilang.ast.BooleanLiteral
 import lausilang.ast.Expression
 import lausilang.ast.ExpressionStatement
+import lausilang.ast.FunctionLiteral
 import lausilang.ast.Identifier
 import lausilang.ast.IfExpression
 import lausilang.ast.InfixExpression
@@ -56,7 +57,7 @@ class Parser(private val lexer: Lexer) {
         currentToken = lexer.nextToken()
         peekToken = lexer.nextToken()
 
-        prefixParseFns[TokenType.IDENTIFIER] = this::parseIdentifierExpression
+        prefixParseFns[TokenType.IDENTIFIER] = this::parseIdentifier
         prefixParseFns[TokenType.INTEGER] = this::parseIntegerLiteral
         prefixParseFns[TokenType.TRUE] = this::parseBooleanLiteral
         prefixParseFns[TokenType.FALSE] = this::parseBooleanLiteral
@@ -64,6 +65,7 @@ class Parser(private val lexer: Lexer) {
         prefixParseFns[TokenType.MINUS] = this::parsePrefixExpression
         prefixParseFns[TokenType.LPAREN] = this::parseGroupedExpression
         prefixParseFns[TokenType.IF] = this::parseIfExpression
+        prefixParseFns[TokenType.FUNCTION] = this::parseFunctionExpression
 
         infixParseFns[TokenType.PLUS] = this::parseInfixExpression
         infixParseFns[TokenType.MINUS] = this::parseInfixExpression
@@ -117,7 +119,7 @@ class Parser(private val lexer: Lexer) {
 
         val expression = parseExpression(Precedence.LOWEST)
         if (expression == null) {
-            _errors.add("Could not parse expression")
+            _errors.add("Could not parse expression at $currentToken")
             return null
         }
 
@@ -129,7 +131,7 @@ class Parser(private val lexer: Lexer) {
 
         val expression = parseExpression(Precedence.LOWEST)
         if (expression == null) {
-            _errors.add("Could not parse expression")
+            _errors.add("Could not parse expression at $currentToken")
             return null
         }
 
@@ -142,7 +144,7 @@ class Parser(private val lexer: Lexer) {
         return ExpressionStatement(expression)
     }
 
-    private fun parseBlockStatement(): Statement {
+    private fun parseBlockStatement(): BlockStatement {
         nextToken()
         val statements = mutableListOf<Statement>()
         while (!currentTokenIs(TokenType.RBRACE)) {
@@ -162,7 +164,7 @@ class Parser(private val lexer: Lexer) {
 
         val condition = parseExpression(Precedence.LOWEST)
         if (condition == null) {
-            _errors.add("If statement has no condition")
+            _errors.add("If statement has no condition at $currentToken")
             return null
         }
 
@@ -174,7 +176,7 @@ class Parser(private val lexer: Lexer) {
 
         val consequence = parseStatement()
         if (consequence == null) {
-            _errors.add("If statement has no valid then block")
+            _errors.add("If statement has no valid then block at $currentToken")
             return null
         }
 
@@ -192,7 +194,6 @@ class Parser(private val lexer: Lexer) {
     private fun parseExpression(precedence: Int): Expression? {
         val prefixParseFn = prefixParseFns[currentToken.type]
         if (prefixParseFn == null) {
-            _errors.add("No prefix parser for operation '${currentToken.literal}' found.")
             return null
         }
 
@@ -207,7 +208,7 @@ class Parser(private val lexer: Lexer) {
         return leftExpression
     }
 
-    private fun parseIdentifierExpression(): Expression {
+    private fun parseIdentifier(): Identifier {
         return Identifier(currentToken.literal)
     }
 
@@ -224,7 +225,7 @@ class Parser(private val lexer: Lexer) {
         nextToken()
         val rightExpression = parseExpression(Precedence.PREFIX)
         if (rightExpression == null) {
-            _errors.add("Could not parse right operation.")
+            _errors.add("Could not parse right operation at $currentToken")
             return null
         }
         return PrefixExpression(operator, rightExpression)
@@ -238,7 +239,7 @@ class Parser(private val lexer: Lexer) {
 
         val right = parseExpression(precedence)
         if (right == null) {
-            _errors.add("Could not parse right expression.")
+            _errors.add("Could not parse right expression at $currentToken")
             return null
         }
 
@@ -254,6 +255,22 @@ class Parser(private val lexer: Lexer) {
         return expression
     }
 
+    private fun parseFunctionExpression(): Expression {
+        expectPeek(TokenType.LPAREN)
+
+        val params = mutableListOf<Identifier>()
+        while (!currentTokenIs(TokenType.RPAREN)) {
+            nextToken()
+            params.add(parseIdentifier())
+            nextToken()
+        }
+        nextToken()
+
+        val body = parseBlockStatement()
+
+        return FunctionLiteral(params, body)
+    }
+
     private fun currentTokenIs(type: TokenType) = currentToken.type == type
 
     private fun peekTokenIs(type: TokenType) = peekToken.type == type
@@ -263,7 +280,7 @@ class Parser(private val lexer: Lexer) {
             nextToken()
             return true
         } else {
-            _errors.add("Expected next token to be of type: ${type}, but is ${peekToken.type}")
+            _errors.add("Expected next token to be of type: ${type}, but is ${peekToken.type}, at $currentToken")
             return false
         }
     }

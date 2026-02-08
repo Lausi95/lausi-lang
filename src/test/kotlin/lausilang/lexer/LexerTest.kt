@@ -12,7 +12,7 @@ class LexerTest {
         val code = ";"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.SEMICOLON, ";"), token)
+        assertEquals(Token(TokenType.SEMICOLON, ";", 0, 1), token)
     }
 
     @Test
@@ -20,7 +20,7 @@ class LexerTest {
         val code = ","
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.COMMA, ","), token)
+        assertEquals(Token(TokenType.COMMA, ",", 0, 1), token)
     }
 
     @Test
@@ -28,7 +28,7 @@ class LexerTest {
         val code = "="
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.ASSIGN, "="), token)
+        assertEquals(Token(TokenType.ASSIGN, "=", 0, 1), token)
     }
 
     @Test
@@ -36,7 +36,7 @@ class LexerTest {
         val code = "+"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.PLUS, "+"), token)
+        assertEquals(Token(TokenType.PLUS, "+", 0, 1), token)
     }
 
     @Test
@@ -44,7 +44,7 @@ class LexerTest {
         val code = "("
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.LPAREN, "("), token)
+        assertEquals(Token(TokenType.LPAREN, "(", 0, 1), token)
     }
 
     @Test
@@ -52,7 +52,7 @@ class LexerTest {
         val code = ")"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.RPAREN, ")"), token)
+        assertEquals(Token(TokenType.RPAREN, ")", 0, 1), token)
     }
 
     @Test
@@ -60,7 +60,7 @@ class LexerTest {
         val code = "{"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.LBRACE, "{"), token)
+        assertEquals(Token(TokenType.LBRACE, "{", 0, 1), token)
     }
 
     @Test
@@ -68,7 +68,7 @@ class LexerTest {
         val code = "}"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.RBRACE, "}"), token)
+        assertEquals(Token(TokenType.RBRACE, "}", 0, 1), token)
     }
 
     @Test
@@ -76,7 +76,7 @@ class LexerTest {
         val code = ""
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.EOF, ""), token)
+        assertEquals(Token(TokenType.EOF, "", 0, 1), token)
     }
 
     @Test
@@ -84,7 +84,7 @@ class LexerTest {
         val code = "-"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.MINUS, "-"), token)
+        assertEquals(Token(TokenType.MINUS, "-", 0, 1), token)
     }
 
     @Test
@@ -92,7 +92,7 @@ class LexerTest {
         val code = "!"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.BANG, "!"), token)
+        assertEquals(Token(TokenType.BANG, "!", 0, 1), token)
     }
 
     @Test
@@ -100,7 +100,7 @@ class LexerTest {
         val code = "/"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.SLASH, "/"), token)
+        assertEquals(Token(TokenType.SLASH, "/", 0, 1), token)
     }
 
     @Test
@@ -108,7 +108,7 @@ class LexerTest {
         val code = "*"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.ASTERISK, "*"), token)
+        assertEquals(Token(TokenType.ASTERISK, "*", 0, 1), token)
     }
 
     @Test
@@ -116,7 +116,7 @@ class LexerTest {
         val code = "<"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.LT, "<"), token)
+        assertEquals(Token(TokenType.LT, "<", 0, 1), token)
     }
 
     @Test
@@ -124,7 +124,7 @@ class LexerTest {
         val code = ">"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.GT, ">"), token)
+        assertEquals(Token(TokenType.GT, ">", 0, 1), token)
     }
 
     @Test
@@ -132,7 +132,7 @@ class LexerTest {
         val code = "true"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.TRUE, "true"), token)
+        assertEquals(Token(TokenType.TRUE, "true", 0, 1), token)
     }
 
     @Test
@@ -140,7 +140,7 @@ class LexerTest {
         val code = "false"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.FALSE, "false"), token)
+        assertEquals(Token(TokenType.FALSE, "false", 0, 1), token)
     }
 
     @Test
@@ -148,7 +148,7 @@ class LexerTest {
         val code = "if"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.IF, "if"), token)
+        assertEquals(Token(TokenType.IF, "if", 0, 1), token)
     }
 
     @Test
@@ -156,7 +156,7 @@ class LexerTest {
         val code = "else"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.ELSE, "else"), token)
+        assertEquals(Token(TokenType.ELSE, "else", 0, 1), token)
     }
 
     @Test
@@ -164,7 +164,7 @@ class LexerTest {
         val code = "return"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.RETURN, "return"), token)
+        assertEquals(Token(TokenType.RETURN, "return", 0, 1), token)
     }
 
     @Test
@@ -172,7 +172,7 @@ class LexerTest {
         val code = "=="
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.EQ, "=="), token)
+        assertEquals(Token(TokenType.EQ, "==", 0, 2), token)
     }
 
     @Test
@@ -180,17 +180,17 @@ class LexerTest {
         val code = "!="
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.NEQ, "!="), token)
+        assertEquals(Token(TokenType.NEQ, "!=", 0, 2), token)
     }
 
     @Test
     fun readMultipleTokens() {
         val code = "(){}"
         val lexer = Lexer(code)
-        assertEquals(Token(TokenType.LPAREN, "("), lexer.nextToken())
-        assertEquals(Token(TokenType.RPAREN, ")"), lexer.nextToken())
-        assertEquals(Token(TokenType.LBRACE, "{"), lexer.nextToken())
-        assertEquals(Token(TokenType.RBRACE, "}"), lexer.nextToken())
+        assertEquals(Token(TokenType.LPAREN, "(", 0, 1), lexer.nextToken())
+        assertEquals(Token(TokenType.RPAREN, ")", 0, 2), lexer.nextToken())
+        assertEquals(Token(TokenType.LBRACE, "{", 0, 3), lexer.nextToken())
+        assertEquals(Token(TokenType.RBRACE, "}", 0, 4), lexer.nextToken())
     }
 
     @Test
@@ -198,7 +198,7 @@ class LexerTest {
         val code = "one"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.IDENTIFIER, "one"), token)
+        assertEquals(Token(TokenType.IDENTIFIER, "one", 0, 1), token)
     }
 
     @Test
@@ -206,7 +206,7 @@ class LexerTest {
         val code = "let"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.LET, "let"), token)
+        assertEquals(Token(TokenType.LET, "let", 0, 1), token)
     }
 
     @Test
@@ -214,7 +214,7 @@ class LexerTest {
         val code = "fn"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.FUNCTION, "fn"), token)
+        assertEquals(Token(TokenType.FUNCTION, "fn", 0, 1), token)
     }
 
     @Test
@@ -222,24 +222,24 @@ class LexerTest {
         val code = "123"
         val lexer = Lexer(code)
         val token = lexer.nextToken()
-        assertEquals(Token(TokenType.INTEGER, "123"), token)
+        assertEquals(Token(TokenType.INTEGER, "123", 0, 1), token)
     }
 
     @Test
     fun readMultipleWordTokens() {
         val code = "fn let foo      123"
         val lexer = Lexer(code)
-        assertEquals(Token(TokenType.FUNCTION, "fn"), lexer.nextToken())
-        assertEquals(Token(TokenType.LET, "let"), lexer.nextToken())
-        assertEquals(Token(TokenType.IDENTIFIER, "foo"), lexer.nextToken())
-        assertEquals(Token(TokenType.INTEGER, "123"), lexer.nextToken())
+        assertEquals(Token(TokenType.FUNCTION, "fn", 0, 1), lexer.nextToken())
+        assertEquals(Token(TokenType.LET, "let", 0, 3), lexer.nextToken())
+        assertEquals(Token(TokenType.IDENTIFIER, "foo", 0, 5), lexer.nextToken())
+        assertEquals(Token(TokenType.INTEGER, "123", 0, 12), lexer.nextToken())
     }
 
     @Test
     fun readWordTokenAndSymbols() {
         val code = "fn("
         val lexer = Lexer(code)
-        assertEquals(Token(TokenType.FUNCTION, "fn"), lexer.nextToken())
-        assertEquals(Token(TokenType.LPAREN, "("), lexer.nextToken())
+        assertEquals(Token(TokenType.FUNCTION, "fn", 0, 1), lexer.nextToken())
+        assertEquals(Token(TokenType.LPAREN, "(", 0, 2), lexer.nextToken())
     }
 }

@@ -40,4 +40,6 @@ enum class TokenType {
 data class Token(
     val type: TokenType,
     val literal: String,
+    val line: Int,
+    val column: Int,
 )

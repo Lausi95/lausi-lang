@@ -4,12 +4,14 @@ import lausilang.token.Token
 import lausilang.token.TokenType
 
 private const val NULL_CHAR = 0.toChar()
-private val ILLEGAL = Token(TokenType.ILLEGAL, "")
+private val ILLEGAL = Token(TokenType.ILLEGAL, "", -1, -1)
 
 class Lexer(private val input: String) {
     private var position: Int = 0
     private var readPosition: Int = 0
     private var char: Char = NULL_CHAR
+    private var line = 0
+    private var column = 0
 
     init {
         readChar()
@@ -21,55 +23,55 @@ class Lexer(private val input: String) {
         skipWhitespace()
 
         when (char) {
-            ';' -> token = Token(TokenType.SEMICOLON, char.toString())
-            ',' -> token = Token(TokenType.COMMA, char.toString())
+            ';' -> token = Token(TokenType.SEMICOLON, char.toString(), line, column)
+            ',' -> token = Token(TokenType.COMMA, char.toString(), line,column)
             '=' -> {
                 if (peekChar() == '=') {
                     val c = char
                     readChar()
-                    token = Token(TokenType.EQ, "" + c + char)
+                    token = Token(TokenType.EQ, "" + c + char, line,column)
                 } else {
-                    token = Token(TokenType.ASSIGN, char.toString())
+                    token = Token(TokenType.ASSIGN, char.toString(), line,column)
                 }
             }
-            '+' -> token = Token(TokenType.PLUS, char.toString())
-            '-' -> token = Token(TokenType.MINUS, char.toString())
+            '+' -> token = Token(TokenType.PLUS, char.toString(), line,column)
+            '-' -> token = Token(TokenType.MINUS, char.toString(), line,column)
             '!' -> {
                 if (peekChar() == '=') {
                     val c = char
                     readChar()
-                    token = Token(TokenType.NEQ, "" + c + char)
+                    token = Token(TokenType.NEQ, "" + c + char, line,column)
 
                 } else {
-                    token = Token(TokenType.BANG, char.toString())
+                    token = Token(TokenType.BANG, char.toString(), line,column)
                 }
             }
-            '/' -> token = Token(TokenType.SLASH, char.toString())
-            '*' -> token = Token(TokenType.ASTERISK, char.toString())
-            '<' -> token = Token(TokenType.LT, char.toString())
-            '>' -> token = Token(TokenType.GT, char.toString())
-            '(' -> token = Token(TokenType.LPAREN, char.toString())
-            ')' -> token = Token(TokenType.RPAREN, char.toString())
-            '{' -> token = Token(TokenType.LBRACE, char.toString())
-            '}' -> token = Token(TokenType.RBRACE, char.toString())
-            NULL_CHAR -> token = Token(TokenType.EOF, "")
+            '/' -> token = Token(TokenType.SLASH, char.toString(), line,column)
+            '*' -> token = Token(TokenType.ASTERISK, char.toString(), line,column)
+            '<' -> token = Token(TokenType.LT, char.toString(), line,column)
+            '>' -> token = Token(TokenType.GT, char.toString(), line,column)
+            '(' -> token = Token(TokenType.LPAREN, char.toString(), line,column)
+            ')' -> token = Token(TokenType.RPAREN, char.toString(), line,column)
+            '{' -> token = Token(TokenType.LBRACE, char.toString(), line,column)
+            '}' -> token = Token(TokenType.RBRACE, char.toString(), line,column)
+            NULL_CHAR -> token = Token(TokenType.EOF, "", line,column)
             else -> {
                 if (char.isLetter()) {
                     val identifier = readIdentifier()
                     token = when (identifier) {
-                        "let" -> Token(TokenType.LET, identifier)
-                        "fn" -> Token(TokenType.FUNCTION, identifier)
-                        "true" -> Token(TokenType.TRUE, identifier)
-                        "false" -> Token(TokenType.FALSE, identifier)
-                        "if" -> Token(TokenType.IF, identifier)
-                        "else" -> Token(TokenType.ELSE, identifier)
-                        "return" -> Token(TokenType.RETURN, identifier)
-                        else -> Token(TokenType.IDENTIFIER, identifier)
+                        "let" -> Token(TokenType.LET, identifier, line,column)
+                        "fn" -> Token(TokenType.FUNCTION, identifier, line,column)
+                        "true" -> Token(TokenType.TRUE, identifier, line,column)
+                        "false" -> Token(TokenType.FALSE, identifier, line,column)
+                        "if" -> Token(TokenType.IF, identifier, line,column)
+                        "else" -> Token(TokenType.ELSE, identifier, line,column)
+                        "return" -> Token(TokenType.RETURN, identifier, line,column)
+                        else -> Token(TokenType.IDENTIFIER, identifier, line,column)
                     }
                 }
                 if (char.isDigit()) {
                     val word = readInteger()
-                    token = Token(TokenType.INTEGER, word)
+                    token = Token(TokenType.INTEGER, word, line,column)
                 }
             }
         }
@@ -100,6 +102,11 @@ class Lexer(private val input: String) {
         char = peekChar()
         position = readPosition
         readPosition += 1
+        column++
+        if (char == '\n') {
+            line++
+            column = 0
+        }
     }
 
     private fun peekChar() =

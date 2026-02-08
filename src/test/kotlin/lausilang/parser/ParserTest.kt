@@ -4,6 +4,7 @@ import lausilang.ast.BlockStatement
 import lausilang.ast.BooleanLiteral
 import lausilang.ast.Expression
 import lausilang.ast.ExpressionStatement
+import lausilang.ast.FunctionLiteral
 import lausilang.ast.Identifier
 import lausilang.ast.IfExpression
 import lausilang.ast.InfixExpression
@@ -73,11 +74,11 @@ class ParserTest {
         parser.parseProgram()
 
         assertEquals(1, parser.errors.size)
-        assertEquals("Expected next token to be of type: ASSIGN, but is INTEGER", parser.errors[0])
+        assertEquals("Expected next token to be of type: ASSIGN, but is INTEGER, at Token(type=IDENTIFIER, literal=x, line=0, column=3)", parser.errors[0])
     }
 
     @Test
-    fun parseIdentifierExpression() {
+    fun parseIdentifier() {
         withParsedProgram("foobar;") { program ->
             program.statements[0].assertExpressionStatement {
                 it.expression.assertIdentifier("foobar")
@@ -233,7 +234,10 @@ class ParserTest {
     @Test
     fun parseComplexExpression() {
         withParsedProgram("5 + 10 * 3 == -5 * 10 / 3 + 5 * 3;") { program ->
-            assertEquals("((5) + ((10) * (3))) == ((((-(5)) * (10)) / (3)) + ((5) * (3)))", program.statements[0].format())
+            assertEquals(
+                "((5) + ((10) * (3))) == ((((-(5)) * (10)) / (3)) + ((5) * (3)))",
+                program.statements[0].format()
+            )
         }
     }
 
@@ -253,13 +257,15 @@ class ParserTest {
 
     @Test
     fun parseFullIfStatement() {
-        withParsedProgram("""
+        withParsedProgram(
+            """
             if (a > b) {
                 a;
             } else {
                 b;
             };
-        """.trimIndent()) { program ->
+        """.trimIndent()
+        ) { program ->
             program.statements[0].assertExpressionStatement { expressionStatement ->
                 expressionStatement.expression.assertIfExpression { ifExpression ->
                     ifExpression.consequence.assertBlockStatement { blockStatement ->
@@ -280,11 +286,13 @@ class ParserTest {
 
     @Test
     fun parseIfStatementWithNoElse() {
-        withParsedProgram("""
+        withParsedProgram(
+            """
             if (a > b) {
                 a;
             };
-        """.trimIndent()) { program ->
+        """.trimIndent()
+        ) { program ->
             program.statements[0].assertExpressionStatement { expressionStatement ->
                 expressionStatement.expression.assertIfExpression { ifExpression ->
                     ifExpression.consequence.assertBlockStatement { blockStatement ->
@@ -293,6 +301,28 @@ class ParserTest {
                         }
                     }
                     assertNull(ifExpression.alternative)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun parseFunctionLiteral() {
+        withParsedProgram(
+            """
+            fn (a, b, c) {
+                return a + b + c;
+            };
+            """.trimIndent()
+        ) { program ->
+            program.statements[0].assertExpressionStatement { expressionStatement ->
+                expressionStatement.expression.assertFunctionLiteral { functionLiteral ->
+                    assertEquals(3, functionLiteral.parameters.size)
+                    functionLiteral.parameters[0].assertIdentifier("a")
+                    functionLiteral.parameters[1].assertIdentifier("b")
+                    functionLiteral.parameters[2].assertIdentifier("c")
+                    assertEquals(1, functionLiteral.body.statements.size)
+                    functionLiteral.body.statements[0].assertReturnStatement()
                 }
             }
         }
@@ -315,7 +345,10 @@ fun assertNoParseErrors(parser: Parser) {
 }
 
 fun Statement.assertExpressionStatement(onSuccess: (ExpressionStatement) -> Unit = {}) {
-    assertTrue(this is ExpressionStatement, "Expected Statement to be ExpressionStatement, got ${this::class.simpleName}")
+    assertTrue(
+        this is ExpressionStatement,
+        "Expected Statement to be ExpressionStatement, got ${this::class.simpleName}"
+    )
     onSuccess(this)
 }
 
@@ -354,7 +387,17 @@ fun Statement.assertBlockStatement(onSuccess: (BlockStatement) -> Unit = {}) {
     onSuccess(this)
 }
 
+fun Statement.assertReturnStatement(onSuccess: (ReturnStatement) -> Unit = {}) {
+    assertTrue(this is ReturnStatement, "Expected ReturnStatement, got ${this::class.simpleName}")
+    onSuccess(this)
+}
+
 fun Expression.assertIfExpression(onSuccess: (IfExpression) -> Unit = {}) {
     assertTrue(this is IfExpression, "Expected Expression to be IfExpression, got ${this::class.simpleName}")
+    onSuccess(this)
+}
+
+fun Expression.assertFunctionLiteral(onSuccess: (FunctionLiteral) -> Unit = {}) {
+    assertTrue(this is FunctionLiteral, "Expected FunctionLiteral, got ${this::class.simpleName}")
     onSuccess(this)
 }
